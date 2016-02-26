@@ -1,5 +1,6 @@
 module.exports = {
-	package:"package gr.softweb.funkmartini.models",
+	package:"gr.softweb.funkmartini.models",
+	projectPath:"/Users/giorgos/Documents/androidstudio/FunkMartini",
 	className:"FMProfile",
 	mapper:{
 		"string":"String",
@@ -8,5 +9,5 @@ module.exports = {
 		address:"FMAddress",
 		age: "AgeRange"
 	},
-	objects:["address"]
+	saveAlso:{"address":"FMAddress"}
 };

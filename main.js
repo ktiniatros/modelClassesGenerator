@@ -25,6 +25,7 @@ var loginURL = baseURL + '/auth/login';
 var profileURL = baseURL + '/users/profile';
 
 var fs = require("fs");
+var path = require("path");
 
 var packageJson = fs.readFileSync("package.json");
 packageJson = JSON.parse(packageJson.toString());
@@ -40,18 +41,13 @@ headers:{
  json:true,
   body: {  }};
 
-request(options, function (error, response, body) {
-  if (error) throw new Error(error);
+function generateFileFrom(body, fileName){
+	var file = "";
+  file += "package " + config.package + ";\n\n" + "/**\n* Generated from " + packageJson.name + " v." + packageJson.version + "\n* created by " + packageJson.author + "\n*/\npublic class " + fileName + " {\n\n"
   
-  console.log(response.statusCode, body);
-  
-  var file = "";
-  file += config.package + "\n\n" + "/**\n* Generated from " + packageJson.name + " v." + packageJson.version + "\n* created from " + packageJson.author + "\n*/\npublic class " + config.className + " {\n\n"
-  
-  var strings = [];
-  var booleans = [];
   //{type:nameOfType}
   var mappedProperties = [];
+  var saveAlso = Object.keys(config.saveAlso);
   for(var prop in body){
 	  console.log(prop, typeof body[prop]);
 	  if(config.mapper[prop] || config.mapper[typeof body[prop]]){
@@ -62,6 +58,9 @@ request(options, function (error, response, body) {
 		  newProperty[prop] = config.mapper[prop];
 		  mappedProperties.push(newProperty);
 	  }
+	  if(saveAlso.indexOf(prop) > -1){
+		  generateFileFrom(body[prop], config.saveAlso[prop]);
+	  }
   }
   for (var index = 0; index < mappedProperties.length; index++) {
 	  var element = mappedProperties[index];
@@ -70,7 +69,7 @@ request(options, function (error, response, body) {
   file += "\n\n\t //getters";
   for (var index = 0; index < mappedProperties.length; index++) {
 	  var element = mappedProperties[index];
-	  file += "\tpublic " + element.type + " get_" + element.name + "() { return " + element.name + "; }\n";
+	  file += "\n\tpublic " + element.type + " get_" + element.name + "() { return " + element.name + "; }\n";
   };
   file += "\n\t //setters";
   for (var index = 0; index < mappedProperties.length; index++) {
@@ -79,32 +78,15 @@ request(options, function (error, response, body) {
 	  var type = element.type;
 	  file += "\n\tpublic void set" + name.charAt(0).toUpperCase() + name.slice(1) + "(" + type + " " + name + ") { this." + name + " = " + name + "; }\n";
   };
+  fs += "\n\n}"
+  fs.writeFileSync(path.join(config.projectPath, "app", "src", "main", "java", config.package.replace(/\./g, path.sep), fileName + ".java"), file);
+//   console.log(file);
+}
+
+request(options, function (error, response, body) {
+  if (error) throw new Error(error);
   
-//   for (var index = 0; index < strings.length; index++) {
-// 	  var element = strings[index];
-// 	  file += "\tprivate String " + element + ";\n"
-//   };
-//   for (var index = 0; index < booleans.length; index++) {
-// 	  var element = booleans[index];
-// 	  file += "\tprivate Boolean " + element + ";\n"
-//   };
-//   file += "\n\t //getters";
-//   for (var index = 0; index < strings.length; index++) {
-// 	  var element = strings[index];
-// 	  file += "\tpublic String get_" + element + "() { return " + element + "; }\n";
-//   };
-//   for (var index = 0; index < booleans.length; index++) {
-// 	  var element = booleans[index];
-// 	  file += "\tpublic Boolean get_" + element + "() { return " + element + "; }\n";
-//   };
-//   file += "\n\t //setters";
-//   for (var index = 0; index < strings.length; index++) {
-// 	  var element = strings[index];
-// 	  file += "\tpublic void set" + element.charAt(0).toUpperCase() + element.slice(1) + "(String " + element + ") { this." + element + " = " + element + "; }\n";
-//   };
-//   for (var index = 0; index < booleans.length; index++) {
-// 	  var element = booleans[index];
-// 	  file += "\tpublic void set" + element.charAt(0).toUpperCase() + element.slice(1) + "(Boolean " + element + ") { this." + element + " = " + element + "; }\n";
-//   };
-  console.log(file);
+  console.log(response.statusCode, body);
+  
+  generateFileFrom(body, config.className);
 });
