@@ -1,0 +1,14 @@
+{
+  "name": "objc_java_models_generator",
+  "version": "0.0.4",
+  "description": "doing a http request and generates from the result json response a java model class (for android) and objc equivalent for iOS",
+  "main": "main.js",
+  "scripts": {
+    "test": "node main.js"
+  },
+  "author": "Giorgos Papadopoulos",
+  "license": "ISC",
+  "dependencies":{
+    "request":"2.69.0"
+  }
+}
